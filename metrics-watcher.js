@@ -1,14 +1,26 @@
 /********************************************************
- * Metrics-Watcher 
- * 
+ * Metrics-Watcher
+ *
  * Copyright 2012 Ben Bertola and iovation, Inc.
- * 
+ *
  * To use this library:
  * 1.  Call addXXX() for each graph you want on your page
  * 2.  Call initGraphs() once to draw the initial graphs
  * 3.  Call updateGraphs(jsonData) with the JSON data from your metrics/servlet as often as you would like your graphs to update.
- * 
+ *
  *******************************************************/
+
+/**
+ * Adds a Gauge type graph to your page.
+ * @param divId The id of the div to draw the graph in
+ * @param className The class name of your metrics data, from the metrics servlet
+ * @param metricName The metric name of your metrics data, from the metrics servlet
+ * @param title The user-displayed title of this graph
+ */
+function addGauge(divId, className, metricName, title){
+	var metricInfo = new MetricInfo(divId, className, metricName, null, title, 'gauge');
+	graphs.push(metricInfo);
+}
 
 /**
  * Adds a Meter type graph to your page.
@@ -39,7 +51,7 @@ function addCounter(divId, className, metricName, max, title){
 /**
  * Add a linked Counter graph.  Linked Counters differ from a plain counter graph in that both the numerator and denominator
  * of a linked counter graph each come from individual Counter Metrics.
- * 
+ *
  * @param divId The id of the div to draw the graph in
  * @param className The class name of your metrics data, from the metrics servlet
  * @param metricName The metric name of your metrics data, from the metrics servlet
@@ -55,13 +67,13 @@ function addLinkedCounter(divId, className, metricName, maxClassName, maxMetricN
 		var maxNode = this.getMetricNode(this.maxClassName, this.maxMetricName, json);
 		return maxNode["count"];
 	};
-	
+
 	graphs.push(metricInfo);
 }
 
 /**
  * Add a Timer graph.  This will include a Meter, Timing Info, and a Histogram.
- * 
+ *
  * @param divId The id of the div to draw the graph in
  * @param className The class name of your metrics data, from the metrics servlet
  * @param metricName The metric name of your metrics data, from the metrics servlet
@@ -72,73 +84,97 @@ function addLinkedCounter(divId, className, metricName, maxClassName, maxMetricN
  */
 function addTimer(divId, className, metricName, max, title, eventType, durationMax){
 	var metricInfo = new MetricInfo(divId, className, metricName, max, title, 'timer');
-	metricInfo.eventType = eventType;
-	
-	metricInfo.getMeterInfo = function(){
 
+	metricInfo.getMeterInfo = function() {
 		var myDivId = this.divId + " div.timerGraph div.row div.meterGraph";
 		var retVal = new MetricInfo(myDivId, this.className, this.metricName, this.max, "Frequency", 'meter');
 
-		retVal.getMetricNode = function getMetricNode(className, metricName, jsonRoot){
+		retVal.getMetricNode = function(className, metricName, jsonRoot) {
 			var classNode = jsonRoot[className];
 			if(!classNode){
 				return null;
 			}
 			return classNode[metricName]["rate"];
 		};
-		
+
 		return retVal;
 	};
 
 	metricInfo.getTimerStatsDivId = function(){
 		return "#" + this.divId + " div.timerGraph div.row div.timerStatsGraph";
 	}
-	
+
 	metricInfo.getTimerHistogramDivId = function(){
 		return "#" + this.divId + " div.timerGraph div.row div.timerHistogram";
 	}
-	
+
 	metricInfo.durationMax = durationMax;
-	
+
+	graphs.push(metricInfo);
+}
+
+function addCache(divId, className, title) {
+	var metricInfo = new MetricInfo(divId, className, null, null, title, 'cache');
+	var id = this.divId + " div.cacheGraph div.row div.evictionCountGraph";
+	metricInfo.getEvictionCountInfo = function() {
+		var myDivId = this.divId + " div.cacheGraph div.row div.evictionCountGraph";
+		var retVal = new MetricInfo(myDivId, this.className, this.metricName, null, "Eviction Count", 'gauge');
+
+		retVal.getMetricNode = function(className, metricName, jsonRoot) {
+			var classNode = jsonRoot[className];
+			if (!classNode) {
+				return null;
+			}
+			return classNode["eviction-count"];
+		};
+		return retVal;
+	};
+
 	graphs.push(metricInfo);
 }
 
 /**
  * Initialized each of the graphs that you have added through addXXX() calls, and draws them on the screen for the first time
  */
-function initGraphs(){
+function initGraphs() {
 	//draw all graphs for the first time
-	for(var i = 0; i < graphs.length; i++){
-		if(graphs[i].type == "meter")
+	for (var i = 0; i < graphs.length; i++) {
+		if (graphs[i].type == "gauge")
+			drawGauge(graphs[i]);
+		else if (graphs[i].type == "meter")
 			drawMeter(graphs[i]);
-		else if(graphs[i].type == "counter")
+		else if (graphs[i].type == "counter")
 			drawCounter(graphs[i]);
-		else if(graphs[i].type == "timer")
+		else if (graphs[i].type == "timer")
 			drawTimer(graphs[i]);
+		else if (graphs[i].type == "cache")
+			drawCache(graphs[i]);
 		else
 			alert("Unknown meter info type: " + graphs[i].type);
 	}
-	
 }
 
 /**
  * Update the existing graphs with new data.  You can call this method as frequently as you would like to, and all graph info will be updated.
- * 
+ *
  * @param json The root of the json node returned from your ajax call to the metrics servlet
  */
 function updateGraphs(json){
 	//draw all graphs for the first time
-	for(var i = 0; i < graphs.length; i++){
-		if(graphs[i].type == "meter")
+	for (var i = 0; i < graphs.length; i++){
+		if (graphs[i].type == "gauge")
+			updateGauge(graphs[i], json);
+		else if (graphs[i].type == "meter")
 			updateMeter(graphs[i], json);
-		else if(graphs[i].type == "counter")
+		else if (graphs[i].type == "counter")
 			updateCounter(graphs[i], json);
-		else if(graphs[i].type == "timer")
+		else if (graphs[i].type == "timer")
 			updateTimer(graphs[i], json);
+		else if (graphs[i].type == "cache")
+			updateCache(graphs[i], json);
 		else
 			alert("Unknown meter info type: " + graphs[i].type);
 	}
-	
 }
 
 /********************************
@@ -153,17 +189,17 @@ function MetricInfo(divId, className, metricName, max, title, type){
 	this.max = max;
 	this.title = title;
 	this.type = type;
-	
+
 	this.getMax = function(json){
 		return this.max;
 	}
-	
+
 	this.getMetricNode = function getMetricNode(className, metricName, jsonRoot){
 		var classNode = jsonRoot[className];
 		if(!classNode){
 			return null;
 		}
-		
+
 		return classNode[metricName];
 	};
 }
@@ -256,13 +292,12 @@ function updateDurationStats(timerInfo, json){
 
 	var timeUnitDiv = $(timerInfo.getTimerStatsDivId() + " p");
 	timeUnitDiv.html("(" + metricData["unit"] + ")");
-	
+
 	updateDuration(timerInfo.getTimerStatsDivId(), metricData, "min", timerInfo.durationMax);
 	updateDuration(timerInfo.getTimerStatsDivId(), metricData, "mean", timerInfo.durationMax);
 	updateDuration(timerInfo.getTimerStatsDivId(), metricData, "median", timerInfo.durationMax);
 	updateDuration(timerInfo.getTimerStatsDivId(), metricData, "max", timerInfo.durationMax);
 	updateDuration(timerInfo.getTimerStatsDivId(), metricData, "std_dev", timerInfo.durationMax);
-	
 }
 
 function updateDuration(timerStatsDivId, durationData, style, max){
@@ -278,7 +313,6 @@ function updateDurationHistogram(timerInfo, json){
 	updateDuration(timerInfo.getTimerHistogramDivId(), metricData, "p98", timerInfo.durationMax);
 	updateDuration(timerInfo.getTimerHistogramDivId(), metricData, "p95", timerInfo.durationMax);
 	updateDuration(timerInfo.getTimerHistogramDivId(), metricData, "p75", timerInfo.durationMax);
-	
 }
 
 /************************************************
@@ -289,15 +323,15 @@ function updateDurationHistogram(timerInfo, json){
  * Draws a meter for the first time.
  * @param meterInfo
  */
-function drawMeter(meterInfo){	
+function drawMeter(meterInfo){
 	var parentDiv = $("#" + meterInfo.divId);
-	
+
 	var html = "<div class=\"metricGraph\"><h3>" + meterInfo.title + "</h3><h1></h1><p></p><table class=\"progressTable\">";
 	html += addMeterRow("1 min", "onemin");
 	html += addMeterRow("5 min", "fivemin");
 	html += addMeterRow("15 min", "fifteenmin");
 	html += addMeterRow("Mean", "mean");
-	
+
 	html += "</table></div>";
 	parentDiv.html(html);
 }
@@ -322,15 +356,15 @@ function updateMeterData(meterInfo, meterData){
 	//set the big counter
 	var gaugeDiv = $("#" + meterInfo.divId + " h1");
 	gaugeDiv.html(formatNumber(meterData["m1"]));
-	
-	//and the {whats}/{time unit} value 
+
+	//and the {whats}/{time unit} value
 	var eventType = meterInfo.eventType;
 	if(!eventType)
 		eventType = meterData["event_type"];
-	
+
 	var dispVal = eventType + "/" + meterData["unit"] + " (1 min)<br/>" + meterData["count"] + " Total";
 	$("#" + meterInfo.divId + " p").html(dispVal);
-	
+
 	//set the mean count
 	setMeterRow(meterInfo, meterData, "mean", "mean");
 	setMeterRow(meterInfo, meterData, "m1", "onemin");
@@ -341,6 +375,65 @@ function updateMeterData(meterInfo, meterData){
 function setMeterRow(meterInfo, meterData, rowType, rowStyle){
 	$("#" + meterInfo.divId + " tr." + rowStyle + " td.progressValue").html(formatNumber(meterData[rowType]));
 	$("#" + meterInfo.divId + " tr." + rowStyle + " td.progressBar div.progress div.bar").css("width", calculatePercentage(meterData[rowType], meterInfo.max) + "%");
-	
 }
 
+/************************************************
+ * Gauge specific methods
+ ***********************************************/
+
+/**
+ * Draws a gauge for the first time.
+ * @param gaugeInfo
+ */
+function drawGauge(gaugeInfo) {
+	var parentDiv = $("#" + gaugeInfo.divId);
+	var html = "<div class=\"metricGraph\"><h3>" + gaugeInfo.title + "</h3><h1></h1>";
+	parentDiv.html(html);
+}
+
+function updateGauge(gaugeInfo, json) {
+	var metricData = gaugeInfo.getMetricNode(gaugeInfo.className, gaugeInfo.metricName, json);
+	if (metricData) {
+		updateGaugeData(gaugeInfo, metricData);
+	}
+}
+
+function updateGaugeData(gaugeInfo, gaugeData) {
+	//set the big counter
+	var gaugeDiv = $("#" + gaugeInfo.divId + " h1");
+	gaugeDiv.html(gaugeData["value"]);
+}
+
+/**********************
+ * Cache specific methods
+ **********************/
+function drawCache(cacheInfo) {
+	var parentDiv = $("#" + cacheInfo.divId);
+
+	//set up the parent container
+	var html = "<div class=\"cacheGraph\"><h1>" + cacheInfo.title + "</h1><div class=\"row\">"
+			+ "<div class=\"span2 evictionCountGraph\"></div>"
+			+ "<div class=\"span2 timerStatsGraph\">accuracy</div>"
+			+ "<div class=\"span2 timerStatsGraph\">hits</div>"
+			+ "<div class=\"span2 timerStatsGraph\">in-memory-hits</div>"
+			+ "<div class=\"span2 timerStatsGraph\">in-memory-misses</div>"
+			+ "<div class=\"span2 timerStatsGraph\">in-memory-objects</div>"
+			+ "<div class=\"span2 timerStatsGraph\">mean-get-time</div>"
+			+ "<div class=\"span2 timerStatsGraph\">mean-search-time</div>"
+			+ "<div class=\"span2 timerStatsGraph\">misses</div>"
+			+ "<div class=\"span2 timerStatsGraph\">objects</div>"
+			+ "<div class=\"span2 timerStatsGraph\"></div>"
+			+ "<div class=\"span2 timerHistogram\"></div></div></div>";
+	parentDiv.html(html);
+
+	//now draw the children
+	drawGauge(cacheInfo.getEvictionCountInfo());
+}
+
+function updateCache(cacheInfo, json) {
+	var evictionCountData = cacheInfo.getEvictionCountInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	if (evictionCountData) {
+		var gaugeDiv = $("#" + cacheInfo.getEvictionCountInfo().divId + " div.metricGraph h1");
+		gaugeDiv.html(evictionCountData["value"]);
+	}
+}

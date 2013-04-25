@@ -1,9 +1,11 @@
 
-.metricGraph {
-	width: 250px;
+.metricGraph,
+.counterGraph,
+.cacheGraph {
 	border-style: solid;
 	border-width: 1px;
 	text-align: center;
+	margin: 10px 0;
 	padding: 10px;
 }
 
@@ -27,12 +29,14 @@
 .timerGraph {
 	border-style: solid;
 	border-width: 1px;
-	margin: 10px;
-	padding 10px;
+	margin: 10px 0;
+	padding: 10px;
 	text-align: center;
 	width: 1170px;
 }
 
 .timerGraph .metricGraph {
 	border-style: none;
+	margin: 0;
+	padding: 0;
 }
