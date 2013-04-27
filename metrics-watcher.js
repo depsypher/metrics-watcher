@@ -17,7 +17,7 @@
  * @param metricName The metric name of your metrics data, from the metrics servlet
  * @param title The user-displayed title of this graph
  */
-function addGauge(divId, className, metricName, title){
+function addGauge(divId, className, metricName, title) {
 	var metricInfo = new MetricInfo(divId, className, metricName, null, title, 'gauge');
 	graphs.push(metricInfo);
 }
@@ -30,7 +30,7 @@ function addGauge(divId, className, metricName, title){
  * @param max What the max value target is, used to determine the % width of progress bars for this graph
  * @param title The user-displayed title of this graph
  */
-function addMeter(divId, className, metricName, max, title){
+function addMeter(divId, className, metricName, max, title) {
 	var metricInfo = new MetricInfo(divId, className, metricName, max, title, 'meter');
 	graphs.push(metricInfo);
 }
@@ -43,13 +43,13 @@ function addMeter(divId, className, metricName, max, title){
  * @param max What the max value target is, used to determine the % width of progress bars for this graph
  * @param title The user-displayed title of this graph
  */
-function addCounter(divId, className, metricName, max, title){
+function addCounter(divId, className, metricName, max, title) {
 	var metricInfo = new MetricInfo(divId, className, metricName, max, title, 'counter');
 	graphs.push(metricInfo);
 }
 
 /**
- * Add a linked Counter graph.  Linked Counters differ from a plain counter graph in that both the numerator and denominator
+ * Add a linked Counter graph. Linked Counters differ from a plain counter graph in that both the numerator and denominator
  * of a linked counter graph each come from individual Counter Metrics.
  *
  * @param divId The id of the div to draw the graph in
@@ -73,7 +73,7 @@ function addLinkedCounter(divId, className, metricName, maxClassName, maxMetricN
 }
 
 /**
- * Add a Timer graph.  This will include a Meter, Timing Info, and a Histogram.
+ * Add a Timer graph. This will include a Meter, Timing Info, and a Histogram.
  *
  * @param divId The id of the div to draw the graph in
  * @param className The class name of your metrics data, from the metrics servlet
@@ -83,7 +83,12 @@ function addLinkedCounter(divId, className, metricName, maxClassName, maxMetricN
  * @param eventType a name for this event type
  * @param durationMax The max target value for duration
  */
-function addTimer(divId, className, metricName, max, title, eventType, durationMax){
+function addTimer(divId, className, metricName, max, title, eventType, durationMax) {
+	var timer = addTimerInternal(divId, className, metricName, max, title, eventType, durationMax, 12);
+	graphs.push(timer);
+}
+
+function addTimerInternal(divId, className, metricName, max, title, eventType, durationMax, width) {
 	var metricInfo = new MetricInfo(divId, className, metricName, max, title, 'timer');
 
 	metricInfo.getMeterInfo = function() {
@@ -91,13 +96,8 @@ function addTimer(divId, className, metricName, max, title, eventType, durationM
 		var retVal = new MetricInfo(myDivId, this.className, this.metricName, this.max, "Frequency", 'meter');
 
 		retVal.getMetricNode = function(className, metricName, jsonRoot) {
-			var classNode = jsonRoot[className];
-			if(!classNode){
-				return null;
-			}
-			return classNode[metricName]["rate"];
+			return !jsonRoot[className] ? null : jsonRoot[className][metricName]["rate"];
 		};
-
 		return retVal;
 	};
 
@@ -108,109 +108,114 @@ function addTimer(divId, className, metricName, max, title, eventType, durationM
 		return "#" + this.divId + " div.timerGraph div.row div.timerHistogram";
 	};
 	metricInfo.durationMax = durationMax;
+	metricInfo.width = width;
 
-	graphs.push(metricInfo);
+	return metricInfo;
 }
 
 function addCache(divId, className, title) {
 	var metricInfo = new MetricInfo(divId, className, null, null, title, "cache");
 
-	metricInfo.getAccuracyInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.accuracyGraph";
-		var result = new MetricInfo(id, className, null, null, "Accuracy", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["accuracy"];
-		};
-		return result;
+	metricInfo.components = {
+		getAccuracyInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.accuracyGraph";
+			var result = new MetricInfo(id, className, null, null, "Accuracy", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["accuracy"];
+			};
+			return result;
+		},
+		getEvictionCountInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.evictionCountGraph";
+			var result = new MetricInfo(id, className, null, null, "Eviction Count", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["eviction-count"];
+			};
+			return result;
+		},
+		getHitsInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.hitsGraph";
+			var result = new MetricInfo(id, className, null, null, "Hits", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["hits"];
+			};
+			return result;
+		},
+		getMissesInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.missesGraph";
+			var result = new MetricInfo(id, className, null, null, "Misses", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["misses"];
+			};
+			return result;
+		},
+		getInMemoryHitsInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.inMemoryHitsGraph";
+			var result = new MetricInfo(id, className, null, null, "In Memory Hits", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["in-memory-hits"];
+			};
+			return result;
+		},
+		getInMemoryMissesInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.inMemoryMissesGraph";
+			var result = new MetricInfo(id, className, null, null, "In Memory Misses", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["in-memory-misses"];
+			};
+			return result;
+		},
+		getInMemoryObjectsInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.inMemoryObjectsGraph";
+			var result = new MetricInfo(id, className, null, null, "In Memory Objects", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["in-memory-objects"];
+			};
+			return result;
+		},
+		getMeanGetTimeInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.meanGetTimeGraph";
+			var result = new MetricInfo(id, className, null, null, "Mean Get Time", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["mean-get-time"];
+			};
+			return result;
+		},
+		getMeanSearchTimeInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.meanSearchTimeGraph";
+			var result = new MetricInfo(id, className, null, null, "Mean Search Time", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["mean-search-time"];
+			};
+			return result;
+		},
+		getObjectsInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.objectsGraph";
+			var result = new MetricInfo(id, className, null, null, "Objects", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["objects"];
+			};
+			return result;
+		},
+		getSearchesPerSecondInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.searchesPerSecondGraph";
+			var result = new MetricInfo(id, className, null, null, "Searches Per Sec", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["searches-per-second"];
+			};
+			return result;
+		},
+		getWriterQueueSizeInfo : function() {
+			var id = divId + " div.cacheGraph div.row div.writerQueueSizeGraph";
+			var result = new MetricInfo(id, className, null, null, "Writer Queue Size", "gauge");
+			result.getMetricNode = function(className, metricName, jsonRoot) {
+				return !jsonRoot[className] ? null : jsonRoot[className]["writer-queue-size"];
+			};
+			return result;
+		}
 	};
-	metricInfo.getEvictionCountInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.evictionCountGraph";
-		var result = new MetricInfo(id, className, null, null, "Eviction Count", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["eviction-count"];
-		};
-		return result;
-	};
-	metricInfo.getHitsInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.hitsGraph";
-		var result = new MetricInfo(id, className, null, null, "Hits", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["hits"];
-		};
-		return result;
-	};
-	metricInfo.getInMemoryHitsInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.inMemoryHitsGraph";
-		var result = new MetricInfo(id, className, null, null, "In Memory Hits", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["in-memory-hits"];
-		};
-		return result;
-	};
-	metricInfo.getInMemoryMissesInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.inMemoryMissesGraph";
-		var result = new MetricInfo(id, className, null, null, "In Memory Misses", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["in-memory-misses"];
-		};
-		return result;
-	};
-	metricInfo.getInMemoryObjectsInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.inMemoryObjectsGraph";
-		var result = new MetricInfo(id, className, null, null, "In Memory Objects", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["in-memory-objects"];
-		};
-		return result;
-	};
-	metricInfo.getMeanGetTimeInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.meanGetTimeGraph";
-		var result = new MetricInfo(id, className, null, null, "Mean Get Time", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["mean-get-time"];
-		};
-		return result;
-	};
-	metricInfo.getMeanSearchTimeInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.meanSearchTimeGraph";
-		var result = new MetricInfo(id, className, null, null, "Mean Search Time", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["mean-search-time"];
-		};
-		return result;
-	};
-	metricInfo.getMissesInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.missesGraph";
-		var result = new MetricInfo(id, className, null, null, "Misses", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["misses"];
-		};
-		return result;
-	};
-	metricInfo.getObjectsInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.objectsGraph";
-		var result = new MetricInfo(id, className, null, null, "Objects", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["objects"];
-		};
-		return result;
-	};
-	metricInfo.getSearchesPerSecondInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.searchesPerSecondGraph";
-		var result = new MetricInfo(id, className, null, null, "Searches Per Second", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["searches-per-second"];
-		};
-		return result;
-	};
-	metricInfo.getWriterQueueSizeInfo = function() {
-		var id = divId + " div.cacheGraph div.row div.writerQueueSizeGraph";
-		var result = new MetricInfo(id, className, null, null, "Writer Queue Size", "gauge");
-		result.getMetricNode = function(className, metricName, jsonRoot) {
-			return !jsonRoot[className] ? null : jsonRoot[className]["writer-queue-size"];
-		};
-		return result;
-	};
+	metricInfo.getTimer = addTimerInternal(divId + "timer", className, "get", 1000, "Get", "get", 1000, 6);
+
 	graphs.push(metricInfo);
 }
 
@@ -303,7 +308,8 @@ function showMeters() {
  **********************/
 function drawCounter(counterInfo) {
 	var parentDiv = $("#" + counterInfo.divId);
-	var html = "<div class='counterGraph'><h3>" + counterInfo.title + "</h3><div class='progress'><div class='bar' style='width: 0%;'></div></div></div>";
+	var html = "<div class='counterGraph'><h3>" + counterInfo.title
+			+ "</h3><div class='progress'><div class='bar' style='width: 0%;'></div></div></div>";
 	parentDiv.html(html);
 }
 
@@ -320,17 +326,16 @@ function updateCounter(counterInfo, json) {
  **********************/
 function drawTimer(timerInfo) {
 	var parentDiv = $("#" + timerInfo.divId);
+	var itemWidth = timerInfo.width / 3;
 
-	// set up the parent container
-	var html = "<div class='timerGraph'><h1>" + timerInfo.title + "</h1><div class='row'>"
-			+ "<div class='span4 meterGraph'>meter graph</div>"
-			+ "<div class='span4 timerStatsGraph'>timer graph</div>"
-			+ "<div class='span4 timerHistogram'>timer histogram</div></div></div>";
+	var html = "<div class='timerGraph span" + timerInfo.width + "'><h1>" + timerInfo.title + "</h1><div class='row'>"
+			+ "<div class='span" + itemWidth + " meterGraph'>meter graph</div>"
+			+ "<div class='span" + itemWidth + " timerStatsGraph'>timer graph</div>"
+			+ "<div class='span" + itemWidth + " timerHistogram'>timer histogram</div></div></div>";
 	parentDiv.html(html);
 
 	// now draw the children
 	drawMeter(timerInfo.getMeterInfo());
-
 	drawDurationStats(timerInfo);
 	drawDurationHistogram(timerInfo);
 }
@@ -382,7 +387,8 @@ function updateDurationStats(timerInfo, json) {
 
 function updateDuration(timerStatsDivId, durationData, style, max) {
 	$(timerStatsDivId + " tr." + style + " td.progressValue").html(formatNumber(durationData[style]));
-	$(timerStatsDivId + " tr." + style + " td.progressBar div.progress div.bar").css("width", calculatePercentage(durationData[style], max) + "%");
+	$(timerStatsDivId + " tr." + style + " td.progressBar div.progress div.bar")
+		.css("width", calculatePercentage(durationData[style], max) + "%");
 }
 
 function updateDurationHistogram(timerInfo, json) {
@@ -451,7 +457,8 @@ function updateMeterData(meterInfo, meterData) {
 
 function setMeterRow(meterInfo, meterData, rowType, rowStyle) {
 	$("#" + meterInfo.divId + " tr." + rowStyle + " td.progressValue").html(formatNumber(meterData[rowType]));
-	$("#" + meterInfo.divId + " tr." + rowStyle + " td.progressBar div.progress div.bar").css("width", calculatePercentage(meterData[rowType], meterInfo.max) + "%");
+	$("#" + meterInfo.divId + " tr." + rowStyle + " td.progressBar div.progress div.bar")
+		.css("width", calculatePercentage(meterData[rowType], meterInfo.max) + "%");
 }
 
 /************************************************
@@ -487,97 +494,102 @@ function drawCache(cacheInfo) {
 	var parentDiv = $("#" + cacheInfo.divId);
 
 	//set up the parent container
-	var html = "<div class='cacheGraph'><h1>" + cacheInfo.title + "</h1><div class='row'>"
-			+ "<div class='span2 accuracyGraph'>accuracy</div>"
-			+ "<div class='span2 evictionCountGraph'></div>"
+	var html = "<div class='cacheGraph span12'><h1>" + cacheInfo.title + "</h1><div class='row'>"
 			+ "<div class='span2 hitsGraph'>hits</div>"
+			+ "<div class='span2 missesGraph'>misses</div>"
+			+ "<div class='span2 evictionCountGraph'></div>"
 			+ "<div class='span2 inMemoryHitsGraph'>in-memory-hits</div>"
 			+ "<div class='span2 inMemoryMissesGraph'>in-memory-misses</div>"
-			+ "</div><div class='row'>"
 			+ "<div class='span2 inMemoryObjectsGraph'>in-memory-objects</div>"
+			+ "</div><div class='row'>"
 			+ "<div class='span2 meanGetTimeGraph'>mean-get-time</div>"
 			+ "<div class='span2 meanSearchTimeGraph'>mean-search-time</div>"
-			+ "<div class='span2 missesGraph'>misses</div>"
 			+ "<div class='span2 objectsGraph'>objects</div>"
-			+ "</div><div class='row'>"
 			+ "<div class='span2 searchesPerSecondGraph'></div>"
 			+ "<div class='span2 writerQueueSizeGraph'></div>"
+			+ "<div class='span2 accuracyGraph'>accuracy</div>"
+			+ "</div><div class='row'>"
+			+ "<div id='" + cacheInfo.divId + "timer' class='span6'>empty</div>"
+			+ "<div id='" + cacheInfo.divId + "timers' class='span6'>empty</div>"
 			+ "</div></div>";
 	parentDiv.html(html);
 
-	drawGauge(cacheInfo.getAccuracyInfo());
-	drawGauge(cacheInfo.getEvictionCountInfo());
-	drawGauge(cacheInfo.getHitsInfo());
-	drawGauge(cacheInfo.getInMemoryHitsInfo());
-	drawGauge(cacheInfo.getInMemoryMissesInfo());
-	drawGauge(cacheInfo.getInMemoryObjectsInfo());
-	drawGauge(cacheInfo.getMeanGetTimeInfo());
-	drawGauge(cacheInfo.getMeanSearchTimeInfo());
-	drawGauge(cacheInfo.getMissesInfo());
-	drawGauge(cacheInfo.getObjectsInfo());
-	drawGauge(cacheInfo.getSearchesPerSecondInfo());
-	drawGauge(cacheInfo.getWriterQueueSizeInfo());
+	drawGauge(cacheInfo.components.getEvictionCountInfo());
+	drawGauge(cacheInfo.components.getHitsInfo());
+	drawGauge(cacheInfo.components.getMissesInfo());
+	drawGauge(cacheInfo.components.getInMemoryHitsInfo());
+	drawGauge(cacheInfo.components.getInMemoryMissesInfo());
+	drawGauge(cacheInfo.components.getInMemoryObjectsInfo());
+	drawGauge(cacheInfo.components.getMeanGetTimeInfo());
+	drawGauge(cacheInfo.components.getMeanSearchTimeInfo());
+	drawGauge(cacheInfo.components.getObjectsInfo());
+	drawGauge(cacheInfo.components.getSearchesPerSecondInfo());
+	drawGauge(cacheInfo.components.getWriterQueueSizeInfo());
+	drawGauge(cacheInfo.components.getAccuracyInfo());
+
+	drawTimer(cacheInfo.getTimer);
 }
 
 function updateCache(cacheInfo, json) {
-	var accuracyData = cacheInfo.getAccuracyInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	var accuracyData = cacheInfo.components.getAccuracyInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
 	if (accuracyData) {
-		var gaugeDiv = $("#" + cacheInfo.getAccuracyInfo().divId + " div.metricGraph h1");
+		var gaugeDiv = $("#" + cacheInfo.components.getAccuracyInfo().divId + " div.metricGraph h1");
 		gaugeDiv.html(accuracyData["value"]);
 	}
-	var evictionCountData = cacheInfo.getEvictionCountInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	var evictionCountData = cacheInfo.components.getEvictionCountInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
 	if (evictionCountData) {
-		var gaugeDiv = $("#" + cacheInfo.getEvictionCountInfo().divId + " div.metricGraph h1");
+		var gaugeDiv = $("#" + cacheInfo.components.getEvictionCountInfo().divId + " div.metricGraph h1");
 		gaugeDiv.html(evictionCountData["value"]);
 	}
-	var hitsData = cacheInfo.getHitsInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	var hitsData = cacheInfo.components.getHitsInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
 	if (hitsData) {
-		var gaugeDiv = $("#" + cacheInfo.getHitsInfo().divId + " div.metricGraph h1");
+		var gaugeDiv = $("#" + cacheInfo.components.getHitsInfo().divId + " div.metricGraph h1");
 		gaugeDiv.html(hitsData["value"]);
 	}
-	var inMemoryHitsData = cacheInfo.getInMemoryHitsInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
-	if (inMemoryHitsData) {
-		var gaugeDiv = $("#" + cacheInfo.getInMemoryHitsInfo().divId + " div.metricGraph h1");
-		gaugeDiv.html(inMemoryHitsData["value"]);
-	}
-	var inMemoryMissesData = cacheInfo.getInMemoryMissesInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
-	if (inMemoryMissesData) {
-		var gaugeDiv = $("#" + cacheInfo.getInMemoryMissesInfo().divId + " div.metricGraph h1");
-		gaugeDiv.html(inMemoryMissesData["value"]);
-	}
-	var inMemoryObjectsData = cacheInfo.getInMemoryObjectsInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
-	if (inMemoryObjectsData) {
-		var gaugeDiv = $("#" + cacheInfo.getInMemoryObjectsInfo().divId + " div.metricGraph h1");
-		gaugeDiv.html(inMemoryObjectsData["value"]);
-	}
-	var meanGetTimeData = cacheInfo.getMeanGetTimeInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
-	if (meanGetTimeData) {
-		var gaugeDiv = $("#" + cacheInfo.getMeanGetTimeInfo().divId + " div.metricGraph h1");
-		gaugeDiv.html(meanGetTimeData["value"]);
-	}
-	var meanSearchTimeData = cacheInfo.getMeanSearchTimeInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
-	if (meanSearchTimeData) {
-		var gaugeDiv = $("#" + cacheInfo.getMeanSearchTimeInfo().divId + " div.metricGraph h1");
-		gaugeDiv.html(meanSearchTimeData["value"]);
-	}
-	var missesData = cacheInfo.getMissesInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	var missesData = cacheInfo.components.getMissesInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
 	if (missesData) {
-		var gaugeDiv = $("#" + cacheInfo.getMissesInfo().divId + " div.metricGraph h1");
+		var gaugeDiv = $("#" + cacheInfo.components.getMissesInfo().divId + " div.metricGraph h1");
 		gaugeDiv.html(missesData["value"]);
 	}
-	var objectsData = cacheInfo.getObjectsInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	var inMemoryHitsData = cacheInfo.components.getInMemoryHitsInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	if (inMemoryHitsData) {
+		var gaugeDiv = $("#" + cacheInfo.components.getInMemoryHitsInfo().divId + " div.metricGraph h1");
+		gaugeDiv.html(inMemoryHitsData["value"]);
+	}
+	var inMemoryMissesData = cacheInfo.components.getInMemoryMissesInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	if (inMemoryMissesData) {
+		var gaugeDiv = $("#" + cacheInfo.components.getInMemoryMissesInfo().divId + " div.metricGraph h1");
+		gaugeDiv.html(inMemoryMissesData["value"]);
+	}
+	var inMemoryObjectsData = cacheInfo.components.getInMemoryObjectsInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	if (inMemoryObjectsData) {
+		var gaugeDiv = $("#" + cacheInfo.components.getInMemoryObjectsInfo().divId + " div.metricGraph h1");
+		gaugeDiv.html(inMemoryObjectsData["value"]);
+	}
+	var meanGetTimeData = cacheInfo.components.getMeanGetTimeInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	if (meanGetTimeData) {
+		var gaugeDiv = $("#" + cacheInfo.components.getMeanGetTimeInfo().divId + " div.metricGraph h1");
+		gaugeDiv.html(meanGetTimeData["value"] + " ms");
+	}
+	var meanSearchTimeData = cacheInfo.components.getMeanSearchTimeInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	if (meanSearchTimeData) {
+		var gaugeDiv = $("#" + cacheInfo.components.getMeanSearchTimeInfo().divId + " div.metricGraph h1");
+		gaugeDiv.html(meanSearchTimeData["value"] + " ms");
+	}
+	var objectsData = cacheInfo.components.getObjectsInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
 	if (objectsData) {
-		var gaugeDiv = $("#" + cacheInfo.getObjectsInfo().divId + " div.metricGraph h1");
+		var gaugeDiv = $("#" + cacheInfo.components.getObjectsInfo().divId + " div.metricGraph h1");
 		gaugeDiv.html(objectsData["value"]);
 	}
-	var searchesPerSecondData = cacheInfo.getSearchesPerSecondInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	var searchesPerSecondData = cacheInfo.components.getSearchesPerSecondInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
 	if (searchesPerSecondData) {
-		var gaugeDiv = $("#" + cacheInfo.getSearchesPerSecondInfo().divId + " div.metricGraph h1");
+		var gaugeDiv = $("#" + cacheInfo.components.getSearchesPerSecondInfo().divId + " div.metricGraph h1");
 		gaugeDiv.html(searchesPerSecondData["value"]);
 	}
-	var writerQueueSizeData = cacheInfo.getWriterQueueSizeInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
+	var writerQueueSizeData = cacheInfo.components.getWriterQueueSizeInfo().getMetricNode(cacheInfo.className, cacheInfo.metricName, json);
 	if (writerQueueSizeData) {
-		var gaugeDiv = $("#" + cacheInfo.getWriterQueueSizeInfo().divId + " div.metricGraph h1");
+		var gaugeDiv = $("#" + cacheInfo.components.getWriterQueueSizeInfo().divId + " div.metricGraph h1");
 		gaugeDiv.html(writerQueueSizeData["value"]);
 	}
+	updateTimer(cacheInfo.getTimer, json);
 }

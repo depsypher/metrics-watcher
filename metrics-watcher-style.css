@@ -32,11 +32,18 @@
 	margin: 10px 0;
 	padding: 10px;
 	text-align: center;
-	width: 1170px;
 }
 
 .timerGraph .metricGraph {
 	border-style: none;
 	margin: 0;
 	padding: 0;
+}
+
+.cacheGraph .metricGraph {
+	padding: 2px 0;
+	margin: 5px 0;
+}
+.cacheGraph .metricGraph h3 {
+	font-size: 14px;
 }

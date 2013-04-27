@@ -32,7 +32,7 @@
 		// See example-metrics.js for sample of the Metrics-servlet format
 		function addGraphs() {
 			addMeter("meterExample", "com.yammer.metrics.web.WebappMetricsFilter",
-					"responseCodes.ok", 500, "Responses OK");
+					"responseCodes.ok", 10, "Responses OK");
 
 			addCounter("counterExample", "com.yammer.metrics.web.WebappMetricsFilter",
 					"activeRequests", 2, "Active Requests (Counter)");
@@ -40,8 +40,7 @@
 			addGauge("gaugeExample", "net.sf.ehcache.Cache.flapjack.flapjack.entity.Session",
 					"accuracy", "Session Cache Accuracy");
 
-			addTimer("timerExample", "flapjack.controller.HomeController",
-					"home", 125, "Home Requests", "requests", 50);
+			addTimer("timerExample", "flapjack.controller.HomeController", "home", 125, "Home Requests", "requests", 50);
 
 			addCache("cacheExample", "net.sf.ehcache.Cache.flapjack.flapjack.entity.Session", "Session Cache");
 
