@@ -1,7 +1,7 @@
 
-.metricGraph,
-.counterGraph,
-.cacheGraph {
+.metricsWatcher.metric,
+.metricsWatcher.counter,
+.metricsWatcher.cache {
 	border-style: solid;
 	border-width: 1px;
 	text-align: center;
@@ -9,31 +9,40 @@
 	padding: 10px;
 }
 
-.metricGraph .progressTable {
+.metricsWatcher.metricGraph .progressTable {
 	width: 100%;
 }
 
-.metricGraph .progressLabel {
+.metricsWatcher .metricGraph .progressLabel {
 	text-align: right;
 	vertical-align: top;
 }
 
-.metricGraph .progressValue {
+.metricsWatcher .metricGraph .progressValue {
 	vertical-align: top;
 }
 
-.metricGraph .progressBar {
+.metricsWatcher.metricGraph .progressBar,
+.metricsWatcher .metricGraph .progressBar {
 	width: 100%;
 }
 
-.timerGraph {
+.metricsWatcher.timerGraph,
+.metricsWatcher .timerGraph {
+	border-width: 1px;
+	text-align: center;
+}
+
+.metricsWatcher.cache .metric {
 	border-style: solid;
 	border-width: 1px;
 	margin: 10px 0;
 	padding: 10px;
-	text-align: center;
 }
-
+.metricsWatcher.cache .metric h3 {
+	font-size: 14px;
+}
+/*
 .timerGraph .metricGraph {
 	border-style: none;
 	margin: 0;
@@ -47,3 +56,4 @@
 .cacheGraph .metricGraph h3 {
 	font-size: 14px;
 }
+*/
