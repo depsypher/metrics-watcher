@@ -34,26 +34,27 @@
 }
 
 .metricsWatcher.cache .metric {
-	border-style: solid;
-	border-width: 1px;
-	margin: 10px 0;
-	padding: 10px;
-}
-.metricsWatcher.cache .metric h3 {
-	font-size: 14px;
-}
-/*
-.timerGraph .metricGraph {
 	border-style: none;
 	margin: 0;
 	padding: 0;
 }
 
-.cacheGraph .metricGraph {
-	padding: 2px 0;
-	margin: 5px 0;
+.metricsWatcher.cache .gaugeTableContainer {
+	border-style: solid;
+	border-width: 1px;
+	padding: 10px 0;
 }
-.cacheGraph .metricGraph h3 {
+.metricsWatcher.cache table.gaugeTable {
+	width: 100%;
+}
+.metricsWatcher.cache table.gaugeTable td {
+	padding: 5px 15px 5px 15px;
+}
+.metricsWatcher.cache table.gaugeTable td.rowName h5 {
+	font-size: 16px;
+	text-align: left;
+}
+.metricsWatcher table.gaugeTable td.rowValue {
 	font-size: 14px;
+	text-align: right;
 }
-*/
