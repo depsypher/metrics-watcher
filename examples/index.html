@@ -20,7 +20,6 @@
 
 	<!-- And include jquery -->
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
-	<script src="http://jquery-json.googlecode.com/files/jquery.json-2.2.min.js"></script>
 
 	<!--  And include the metrics-watcher library -->
 	<script src="../metrics-watcher.js"></script>
@@ -63,7 +62,7 @@
 
 		function keepUpdatingGraphs() {
 			downloadMetricData();
-			setTimeout(keepUpdatingGraphs, 500000);
+			setTimeout(keepUpdatingGraphs, 5000);
 		}
 
 		function downloadMetricData() {
@@ -109,23 +108,27 @@
 			You can view the source of this page for sample usage, and the source of
 			metrics-watcher.js for API documentation.
 		</p>
-		<div class="row">
-			<div id="jvmExample" class="span12"></div>
-		</div>
-		<div class="row">
+		<div class="row-fluid">
 			<div id="meterExample" class="span3"></div>
 			<div id="counterExample" class="span3"></div>
 			<div id="linkedCounterExample" class="span3"></div>
 			<div id="gaugeExample" class="span3"></div>
 		</div>
-		<div class="row">
-			<div id="cacheExample" class="span12"></div>
+		<br />
+		<div class="row-fluid">
+			<div id="jvmExample"></div>
 		</div>
-		<div class="row">
-			<div id="queryCache" class="span12"></div>
+		<br />
+		<div class="row-fluid">
+			<div id="timerExample"></div>
 		</div>
-		<div class="row">
-			<div id="timerExample" class="span12"></div>
+		<br />
+		<div class="row-fluid">
+			<div id="cacheExample"></div>
+		</div>
+		<br />
+		<div class="row-fluid">
+			<div id="queryCache"></div>
 		</div>
 	</div>
 </body>

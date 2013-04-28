@@ -89,7 +89,7 @@
 	 * @param durationMax The max target value for duration
 	 */
 	metricsWatcher.addTimer = function(divId, className, metricName, max, title, eventType, durationMax) {
-		var timer = addTimerInternal(divId, className, metricName, max, title, eventType, durationMax, 12);
+		var timer = addTimerInternal(divId, className, metricName, max, title, eventType, durationMax, false);
 		graphs.push(timer);
 	}
 
@@ -125,8 +125,8 @@
 				new MetricInfo(null, className, "accuracy", null, "Accuracy", "gauge")
 			]
 		};
-		metricInfo.getTimer = addTimerInternal(divId + "gettimer", className, "get", 1000, "Get", "get", 1000, 9);
-		metricInfo.putTimer = addTimerInternal(divId + "puttimer", className, "put", 1000, "Put", "put", 10000, 9);
+		metricInfo.getTimer = addTimerInternal(divId + "gettimer", className, "get", 1000, "Get", "get", 1000, true);
+		metricInfo.putTimer = addTimerInternal(divId + "puttimer", className, "put", 1000, "Put", "put", 10000, true);
 
 		graphs.push(metricInfo);
 	}
@@ -227,11 +227,11 @@
 		return input.charAt(0).toUpperCase() + input.slice(1);
 	}
 
-	function addTimerInternal(divId, className, metricName, max, title, eventType, durationMax, width) {
+	function addTimerInternal(divId, className, metricName, max, title, eventType, durationMax, isNested) {
 		var metricInfo = new MetricInfo(divId, className, metricName, max, title, 'timer');
 
 		metricInfo.getMeterInfo = function() {
-			var myDivId = this.divId + " div.timerGraph div.row div.meterGraph";
+			var myDivId = this.divId + " div.timerGraph td.meterGraph";
 			var retVal = new MetricInfo(myDivId, this.className, this.metricName, this.max, "Frequency", 'meter');
 
 			retVal.getMetricNode = function(className, metricName, jsonRoot) {
@@ -243,13 +243,13 @@
 		};
 
 		metricInfo.getTimerStatsDivId = function() {
-			return "#" + this.divId + " div.timerGraph div.row div.timerStatsGraph";
+			return "#" + this.divId + " div.timerGraph td.timerStatsGraph";
 		};
 		metricInfo.getTimerHistogramDivId = function() {
-			return "#" + this.divId + " div.timerGraph div.row div.timerHistogram";
+			return "#" + this.divId + " div.timerGraph td.timerHistogram";
 		};
 		metricInfo.durationMax = durationMax;
-		metricInfo.width = width;
+		metricInfo.isNested = isNested;
 
 		return metricInfo;
 	}
@@ -266,10 +266,10 @@
 
 	function updateCounter(counterInfo, json) {
 		var metricData = counterInfo.getMetricNode(counterInfo.className, counterInfo.metricName, json);
-		var pct = calculatePercentage(metricData["count"], counterInfo.getMax(json));
+		var pct = calculatePercentage(metricData.count, counterInfo.getMax(json));
 
 		$("#" + counterInfo.divId + " div.progress div.bar").css("width", pct + "%");
-		$("#" + counterInfo.divId + " div.progress div.bar").html(metricData["count"] + "/" + counterInfo.getMax(json));
+		$("#" + counterInfo.divId + " div.progress div.bar").html(metricData.count + "/" + counterInfo.getMax(json));
 	}
 
 	/*
@@ -278,11 +278,15 @@
 	function drawTimer(timerInfo) {
 		var parentDiv = $("#" + timerInfo.divId);
 
-		var itemWidth = timerInfo.width / 3;
-		var html = "<div class='metricsWatcher timer timerGraph'><h1>" + timerInfo.title + "</h1><div class='row'>"
-				+ "<div class='span" + itemWidth + " meterGraph'></div>"
-				+ "<div class='span" + itemWidth + " timerStatsGraph'></div>"
-				+ "<div class='span" + itemWidth + " timerHistogram'></div></div></div>";
+		var nested = (timerInfo.isNested) ? " nested" : "";
+		var html = "<div class='metricsWatcher timer timerGraph" + nested + "'>"
+				+ "<fieldset><legend><h1>" + timerInfo.title + "</h1></legend>"
+				+ "<div class='timerContainer span12'>"
+				+ "<table><tr>"
+				+ "<td class='meterGraph span4'></td>"
+				+ "<td class='timerStatsGraph span4'></td>"
+				+ "<td class='timerHistogram span4'></td>"
+				+ "</tr></table></div></fieldset>";
 		parentDiv.html(html);
 
 		drawMeter(timerInfo.getMeterInfo());
@@ -388,7 +392,7 @@
 			eventType = meterData["event_type"];
 		}
 
-		gaugeDiv.html("Moving averages of " + meterData["count"] + " " + eventType + " total");
+		gaugeDiv.html("Moving averages of " + meterData.count + " " + eventType + " total");
 
 		// set the mean count
 		setMeterRow(meterInfo, meterData, "mean", "mean");
@@ -419,7 +423,7 @@
 	}
 	function updateGaugeData(gaugeInfo, gaugeData) {
 		var gaugeDiv = $("#" + gaugeInfo.divId + " h1");
-		gaugeDiv.html(gaugeData["value"]);
+		gaugeDiv.html(gaugeData.value);
 	}
 
 	/*
@@ -427,8 +431,9 @@
 	 */
 	function drawGaugeTable(divId, title, gauges) {
 		var parentDiv = $("#" + divId);
-		var html = "<div class='metricsWatcher metric metricGraph'><h2>" + title + "</h2>"
-				+ "<h1></h1><div class='gaugeTableContainer'><table class='gaugeTable'></div></table></div>";
+		var html = "<div class='metricsWatcher metric metricGraph nested'>"
+				+ "<fieldset><legend><h1>" + title + "</h1></legend>"
+				+ "<div class='gaugeTableContainer'><table class='gaugeTable'></table></div></fieldset></div>";
 
 		parentDiv.html(html);
 	}
@@ -452,15 +457,17 @@
 	function drawCache(cacheInfo) {
 		var parentDiv = $("#" + cacheInfo.divId);
 
-		var html = "<div class='metricsWatcher cache cacheGraph span12'><h1>" + cacheInfo.title + "</h1>"
-				+ "	<div class='row'>"
-				+ "		<div id='" + cacheInfo.divId + "Statistics' class='span3'></div>"
+		var html = "<div class='metricsWatcher cache cacheGraph span12'>"
+				+ "<fieldset><legend><h1>" + cacheInfo.title + "</h1></legend>"
+				+ "<div class='cacheContainer span12'>"
+				+ "	<div class='row-fluid'>"
+				+ "		<div class='span3'><div id='" + cacheInfo.divId + "Statistics'></div></div>"
 				+ "		<div class='span9'>"
 				+ "			<div id='" + cacheInfo.divId + "gettimer'></div>"
 				+ "			<div id='" + cacheInfo.divId + "puttimer'></div>"
 				+ "		</div>"
 				+ "	</div>"
-				+ "</div>";
+				+ "</div></fieldset></div>";
 		parentDiv.html(html);
 
 		var length = cacheInfo.components.gauges.length;
@@ -478,7 +485,7 @@
 			var data = gauge.getMetricNode(cacheInfo.className, gauge.metricName, json);
 			if (data) {
 				var gaugeDiv = $("#" + gauge.divId + " div.metricGraph h1");
-				gaugeDiv.html(data["value"]);
+				gaugeDiv.html(data.value);
 			}
 		}
 		updateTimer(cacheInfo.getTimer, json);
@@ -491,15 +498,18 @@
 	 */
 	function drawJvm(jvmInfo) {
 		var parentDiv = $("#" + jvmInfo.divId);
-		var html = "<div class='metricsWatcher jvm metricGraph span12'><h1>" + jvmInfo.title + "</h1>"
+		var html = "<div class='metricsWatcher jvm metricGraph span12'>"
+				+ "<fieldset><legend><h1>" + jvmInfo.title + "</h1></legend>"
+				+ "<div class='jvmContainer span12'>"
 				+ "	<div id='" + jvmInfo.divId + "Vm'></div>"
-				"</div>";
+				+ "</div>"
+				+ "</fieldset></div>";
 		parentDiv.html(html);
 	}
 	function updateJvm(jvmInfo, json) {
 		var vmDiv = $("#" + jvmInfo.divId + "Vm");
 		var jvm = json[jvmInfo.className];
-		var html = "<div class='row'>"
+		var html = "<div class='row-fluid'>"
 				+ "<div class='span3'><table class='jvmTable'>"
 				+ "<tr><td class='rowName'><h5>Name</h5></td><td>" + jvm.vm.name + "</td></tr>"
 				+ "<tr><td><h5>Version</h5></td><td>" + jvm.vm.version + "</td></tr>"
