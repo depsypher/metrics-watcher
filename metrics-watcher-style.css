@@ -1,10 +1,11 @@
 
 .metricsWatcher.metric,
 .metricsWatcher.counter,
-.metricsWatcher.cache {
+.metricsWatcher.cache,
+.metricsWatcher.jvm {
 	border-style: solid;
 	border-width: 1px;
-	text-align: center;
+	text-align: left;
 	margin: 10px 0;
 	padding: 10px;
 }
@@ -30,7 +31,7 @@
 .metricsWatcher.timerGraph,
 .metricsWatcher .timerGraph {
 	border-width: 1px;
-	text-align: center;
+	text-align: left;
 }
 
 .metricsWatcher.cache .metric {
@@ -44,17 +45,23 @@
 	border-width: 1px;
 	padding: 10px 0;
 }
-.metricsWatcher.cache table.gaugeTable {
+.metricsWatcher.cache table.gaugeTable,
+.metricsWatcher.jvm table.jvmTable {
 	width: 100%;
 }
-.metricsWatcher.cache table.gaugeTable td {
+.metricsWatcher.cache table.gaugeTable td,
+.metricsWatcher.jvm table.jvmTable td {
 	padding: 5px 15px 5px 15px;
 }
-.metricsWatcher.cache table.gaugeTable td.rowName h5 {
-	font-size: 16px;
+.metricsWatcher.cache table.gaugeTable td h5,
+.metricsWatcher.jvm table.jvmTable td h5 {
+	font-size: 15px;
+	font-weight: normal;
 	text-align: left;
 }
-.metricsWatcher table.gaugeTable td.rowValue {
+.metricsWatcher table.gaugeTable td,
+.metricsWatcher table.jvmTable td {
 	font-size: 14px;
 	text-align: right;
 }
+

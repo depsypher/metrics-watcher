@@ -31,20 +31,23 @@
 	<script>
 		// See example-metrics.js for sample of the Metrics-servlet format
 		function addGraphs() {
-			addMeter("meterExample", "com.yammer.metrics.web.WebappMetricsFilter",
+			metricsWatcher.addMeter("meterExample", "com.yammer.metrics.web.WebappMetricsFilter",
 					"responseCodes.ok", 10, "Responses OK");
 
-			addCounter("counterExample", "com.yammer.metrics.web.WebappMetricsFilter",
+			metricsWatcher.addCounter("counterExample", "com.yammer.metrics.web.WebappMetricsFilter",
 					"activeRequests", 2, "Active Requests (Counter)");
 
-			addGauge("gaugeExample", "net.sf.ehcache.Cache.flapjack.flapjack.entity.Session",
+			metricsWatcher.addGauge("gaugeExample", "net.sf.ehcache.Cache.flapjack.flapjack.entity.Session",
 					"accuracy", "Session Cache Accuracy");
 
-			addTimer("timerExample", "flapjack.controller.HomeController", "home", 125, "Home Requests", "requests", 50);
+			metricsWatcher.addTimer("timerExample", "flapjack.controller.HomeController", "home", 125, "Home Requests", "requests", 50);
 
-			addCache("cacheExample", "net.sf.ehcache.Cache.flapjack.flapjack.entity.Session", "Session Cache");
+			metricsWatcher.addCache("cacheExample", "net.sf.ehcache.Cache.flapjack.flapjack.entity.Session", "Session Cache");
+			metricsWatcher.addCache("queryCache", "net.sf.ehcache.Cache.flapjack.org.hibernate.cache.internal.StandardQueryCache", "Query Cache");
 
-// 			addLinkedCounter("linkedCounterExample",
+			metricsWatcher.addJvm("jvmExample", "jvm", "JVM");
+
+// 			metricsWatcher.addLinkedCounter("linkedCounterExample",
 // 					"com.iovation.metrics.watcher.example.ConnectionPool",
 // 					"connectionsInUseCounter",
 // 					"com.iovation.metrics.watcher.example.ConnectionPool",
@@ -54,17 +57,17 @@
 
 		$(document).ready(function() {
 			addGraphs();
-			initGraphs();
+			metricsWatcher.initGraphs();
 			keepUpdatingGraphs();
 		});
 
 		function keepUpdatingGraphs() {
 			downloadMetricData();
-			setTimeout(keepUpdatingGraphs, 60000);
+			setTimeout(keepUpdatingGraphs, 500000);
 		}
 
 		function downloadMetricData() {
-			updateGraphs(exampleMetricsData);
+			metricsWatcher.updateGraphs(exampleMetricsData);
 			// Normally metric data will be loaded from a servlet with an Ajax call like the following.
 			// For this example, it is hardcoded.
 			//
@@ -107,6 +110,9 @@
 			metrics-watcher.js for API documentation.
 		</p>
 		<div class="row">
+			<div id="jvmExample" class="span12"></div>
+		</div>
+		<div class="row">
 			<div id="meterExample" class="span3"></div>
 			<div id="counterExample" class="span3"></div>
 			<div id="linkedCounterExample" class="span3"></div>
@@ -114,6 +120,9 @@
 		</div>
 		<div class="row">
 			<div id="cacheExample" class="span12"></div>
+		</div>
+		<div class="row">
+			<div id="queryCache" class="span12"></div>
 		</div>
 		<div class="row">
 			<div id="timerExample" class="span12"></div>
