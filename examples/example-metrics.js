@@ -624,5 +624,15 @@ var exampleMetricsData = {
 			"type" : "gauge",
 			"value" : 0
 		}
-	}
+	},
+	"com.iovation.metrics.watcher.example.ConnectionPool": {
+		"connectionsCreatedCounter": {
+			"type": "counter",
+			"count": 100
+		},
+		"connectionsInUseCounter": {
+			"type": "counter",
+			"count": 95
+		}
+	},
 };

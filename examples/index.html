@@ -31,28 +31,23 @@
 		// See example-metrics.js for sample of the Metrics-servlet format
 		function addGraphs() {
 			metricsWatcher.addMeter("meterExample", "com.yammer.metrics.web.WebappMetricsFilter",
-					"responseCodes.ok", 10, "Responses OK");
+					"responseCodes.ok", 10, "Meter");
 
 			metricsWatcher.addCounter("counterExample", "com.yammer.metrics.web.WebappMetricsFilter",
-					"activeRequests", 2, "Active Requests (Counter)");
+					"activeRequests", 2, "Counter");
+
+			metricsWatcher.addLinkedCounter("linkedCounterExample",
+					"com.iovation.metrics.watcher.example.ConnectionPool", "connectionsInUseCounter",
+					"com.iovation.metrics.watcher.example.ConnectionPool", "connectionsCreatedCounter",
+					"Linked Counter");
 
 			metricsWatcher.addGauge("gaugeExample", "net.sf.ehcache.Cache.flapjack.flapjack.entity.Session",
-					"accuracy", "Session Cache Accuracy");
+					"accuracy", "Gauge");
 
-			metricsWatcher.addTimer("timerExample", "flapjack.controller.HomeController", "home", 125, "Home Requests", "requests", 50);
-
-			metricsWatcher.addCache("cacheExample", "net.sf.ehcache.Cache.flapjack.flapjack.entity.Session", "Session Cache");
-			metricsWatcher.addCache("queryCache", "net.sf.ehcache.Cache.flapjack.org.hibernate.cache.internal.StandardQueryCache", "Query Cache");
-
-			metricsWatcher.addJvm("jvmExample", "jvm", "JVM");
+			metricsWatcher.addTimer("timerExample", "flapjack.controller.HomeController", "home", 125, "Timer", "requests", 50);
+			metricsWatcher.addCache("queryCache", "net.sf.ehcache.Cache.flapjack.org.hibernate.cache.internal.StandardQueryCache", "Ehcache");
 			metricsWatcher.addWeb("webExample", "com.yammer.metrics.web.WebappMetricsFilter", "Web Server");
-
-// 			metricsWatcher.addLinkedCounter("linkedCounterExample",
-// 					"com.iovation.metrics.watcher.example.ConnectionPool",
-// 					"connectionsInUseCounter",
-// 					"com.iovation.metrics.watcher.example.ConnectionPool",
-// 					"connectionsCreatedCounter",
-// 					"In Use/Open Connections (Linked Counter)");
+			metricsWatcher.addJvm("jvmExample", "jvm", "JVM");
 		}
 
 		$(document).ready(function() {
@@ -63,7 +58,7 @@
 
 		function keepUpdatingGraphs() {
 			downloadMetricData();
-			setTimeout(keepUpdatingGraphs, 500000);
+			setTimeout(keepUpdatingGraphs, 5000);
 		}
 
 		function downloadMetricData() {
@@ -105,15 +100,7 @@
 	<div class="container mainContent">
 		<h1>Metrics Watcher Examples</h1>
 		<br/>
-		<p>Here are examples of the different gauge types that Metrics-watcher currently supports.</p>
-		<p>
-			You can view the source of this page for sample usage, and the source of
-			metrics-watcher.js for API documentation.
-		</p>
-		<div class="row-fluid">
-			<div id="webExample"></div>
-		</div>
-		<br/>
+		<p>Metrics Watcher currently supports these basic gauge types:</p>
 		<div class="row-fluid">
 			<div id="meterExample" class="span3"></div>
 			<div id="counterExample" class="span3"></div>
@@ -121,6 +108,11 @@
 			<div id="gaugeExample" class="span3"></div>
 		</div>
 		<br />
+		<p>Metrics Watcher also comes with graphs composed of multiple gauges to support the types of instrumentation the Metrics library implements:</p>
+		<div class="row-fluid">
+			<div id="webExample"></div>
+		</div>
+		<br/>
 		<div class="row-fluid">
 			<div id="jvmExample"></div>
 		</div>
@@ -129,9 +121,6 @@
 			<div id="timerExample"></div>
 		</div>
 		<br />
-		<div class="row-fluid">
-			<div id="cacheExample"></div>
-		</div>
 		<br />
 		<div class="row-fluid">
 			<div id="queryCache"></div>
