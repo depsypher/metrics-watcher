@@ -144,6 +144,77 @@
 	}
 
 	/**
+	 * Add a web server graph.
+	 *
+	 * @param divId The id of the div to draw the graph in
+	 * @param className The class name of your metrics data, from the metrics servlet
+	 * @param title The user-displayed title of this graph
+	 */
+	metricsWatcher.addWeb = function(divId, className, title) {
+		var metricInfo = new MetricInfo(divId, className, null, null, title, "web");
+
+		metricInfo.getResponseCodesOkInfo = function() {
+			var result = new MetricInfo(divId + " td.responseCodesOkGraph", className, null, 10, "OK Responses", 'meter');
+			result.getMetricNode = function(cName, mName, jsonRoot) {
+				return !jsonRoot[cName] ? null : jsonRoot[cName]["responseCodes.ok"];
+			};
+			return result;
+		};
+		metricInfo.getResponseCodesBadRequestInfo = function() {
+			var result = new MetricInfo(divId + " td.responseCodesBadRequestGraph", className, null, 10, "Bad Responses", 'meter');
+			result.getMetricNode = function(cName, mName, jsonRoot) {
+				return !jsonRoot[cName] ? null : jsonRoot[cName]["responseCodes.badRequest"];
+			};
+			return result;
+		};
+		metricInfo.getResponseCodesCreatedInfo = function() {
+			var result = new MetricInfo(divId + " td.responseCodesCreatedGraph", className, null, 10, "Created Responses", 'meter');
+			result.getMetricNode = function(cName, mName, jsonRoot) {
+				return !jsonRoot[cName] ? null : jsonRoot[cName]["responseCodes.created"];
+			};
+			return result;
+		};
+		metricInfo.getResponseCodesNoContentInfo = function() {
+			var result = new MetricInfo(divId + " td.responseCodesNoContentGraph", className, null, 10, "No Content Responses", 'meter');
+			result.getMetricNode = function(cName, mName, jsonRoot) {
+				return !jsonRoot[cName] ? null : jsonRoot[cName]["responseCodes.noContent"];
+			};
+			return result;
+		};
+		metricInfo.getResponseCodesNotFoundInfo = function() {
+			var result = new MetricInfo(divId + " td.responseCodesNotFoundGraph", className, null, 10, "Not Found Responses", 'meter');
+			result.getMetricNode = function(cName, mName, jsonRoot) {
+				return !jsonRoot[cName] ? null : jsonRoot[cName]["responseCodes.notFound"];
+			};
+			return result;
+		};
+		metricInfo.getResponseCodesOtherInfo = function() {
+			var result = new MetricInfo(divId + " td.responseCodesOtherGraph", className, null, 10, "Other Responses", 'meter');
+			result.getMetricNode = function(cName, mName, jsonRoot) {
+				return !jsonRoot[cName] ? null : jsonRoot[cName]["responseCodes.other"];
+			};
+			return result;
+		};
+		metricInfo.getResponseCodesServerErrorInfo = function() {
+			var result = new MetricInfo(divId + " td.responseCodesServerErrorGraph", className, null, 10, "Server Error Responses", 'meter');
+			result.getMetricNode = function(cName, mName, jsonRoot) {
+				return !jsonRoot[cName] ? null : jsonRoot[cName]["responseCodes.serverError"];
+			};
+			return result;
+		};
+		metricInfo.getActiveRequestsInfo = function() {
+			var result = new MetricInfo(divId + " td.activeRequestsGraph", className, null, 10, "Active Requests", 'counter');
+			result.getMetricNode = function(cName, mName, jsonRoot) {
+				return !jsonRoot[cName] ? null : jsonRoot[cName]["activeRequests"];
+			};
+			return result;
+		};
+		metricInfo.getRequestsInfo = addTimerInternal(divId + " td.requestsGraph", className, "requests", 100, "Requests", "requests", 100, true);
+
+		graphs.push(metricInfo);
+	}
+
+	/**
 	 * Initialized each of the graphs that you have added through addXXX() calls,
 	 * and draws them on the screen for the first time
 	 */
@@ -162,6 +233,8 @@
 				drawCache(graphs[i]);
 			else if (graphs[i].type == "jvm")
 				drawJvm(graphs[i]);
+			else if (graphs[i].type == "web")
+				drawWeb(graphs[i]);
 			else
 				alert("Unknown meter info type: " + graphs[i].type);
 		}
@@ -187,6 +260,8 @@
 				updateCache(graphs[i], json);
 			else if (graphs[i].type == "jvm")
 				updateJvm(graphs[i], json);
+			else if (graphs[i].type == "web")
+				updateWeb(graphs[i], json);
 			else
 				alert("Unknown meter info type: " + graphs[i].type);
 		}
@@ -392,7 +467,7 @@
 			eventType = meterData["event_type"];
 		}
 
-		gaugeDiv.html("Moving averages of " + meterData.count + " " + eventType + " total");
+		gaugeDiv.html("Moving average of " + meterData.count + " " + eventType);
 
 		// set the mean count
 		setMeterRow(meterInfo, meterData, "mean", "mean");
@@ -506,6 +581,7 @@
 				+ "</fieldset></div>";
 		parentDiv.html(html);
 	}
+
 	function updateJvm(jvmInfo, json) {
 		var vmDiv = $("#" + jvmInfo.divId + "Vm");
 		var jvm = json[jvmInfo.className];
@@ -552,6 +628,55 @@
 				+ "</table></div></div>";
 
 		vmDiv.html(html);
+	}
+
+	/*
+	 * Web Server methods
+	 */
+	function drawWeb(webInfo) {
+		var parentDiv = $("#" + webInfo.divId);
+		var html = "<div class='metricsWatcher web metricGraph span12'>"
+				+ "<fieldset><legend><h1>" + webInfo.title + "</h1></legend>"
+				+ "<div class='webContainer span12'>"
+				+ "	<div id='" + webInfo.divId + "Web'></div>"
+				+ "<table><tr>"
+				+ "<td colspan='4' class='requestsGraph span12'></td>"
+				+ "</tr><tr>"
+				+ "<td class='activeRequestsGraph span3'></td>"
+				+ "<td class='responseCodesOkGraph span3'></td>"
+				+ "<td class='responseCodesCreatedGraph span3'></td>"
+				+ "<td class='responseCodesOtherGraph span3'></td>"
+				+ "</tr><tr>"
+				+ "<td class='responseCodesBadRequestGraph span3'></td>"
+				+ "<td class='responseCodesNoContentGraph span3'></td>"
+				+ "<td class='responseCodesNotFoundGraph span3'></td>"
+				+ "<td class='responseCodesServerErrorGraph span3'></td>"
+				+ "</tr></table>"
+				+ "</div>"
+				+ "</fieldset></div>";
+		parentDiv.html(html);
+
+		drawTimer(webInfo.getRequestsInfo);
+		drawMeter(webInfo.getResponseCodesOkInfo());
+		drawMeter(webInfo.getResponseCodesBadRequestInfo());
+		drawMeter(webInfo.getResponseCodesCreatedInfo());
+		drawMeter(webInfo.getResponseCodesNoContentInfo());
+		drawMeter(webInfo.getResponseCodesNotFoundInfo());
+		drawMeter(webInfo.getResponseCodesOtherInfo());
+		drawMeter(webInfo.getResponseCodesServerErrorInfo());
+		drawCounter(webInfo.getActiveRequestsInfo());
+	}
+
+	function updateWeb(webInfo, json) {
+		updateTimer(webInfo.getRequestsInfo, json);
+		updateMeter(webInfo.getResponseCodesOkInfo(), json);
+		updateMeter(webInfo.getResponseCodesBadRequestInfo(), json);
+		updateMeter(webInfo.getResponseCodesCreatedInfo(), json);
+		updateMeter(webInfo.getResponseCodesNoContentInfo(), json);
+		updateMeter(webInfo.getResponseCodesNotFoundInfo(), json);
+		updateMeter(webInfo.getResponseCodesOtherInfo(), json);
+		updateMeter(webInfo.getResponseCodesServerErrorInfo(), json);
+		updateCounter(webInfo.getActiveRequestsInfo(), json);
 	}
 
 }(window.metricsWatcher = window.metricsWatcher || {}, jQuery));

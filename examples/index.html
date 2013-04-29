@@ -45,6 +45,7 @@
 			metricsWatcher.addCache("queryCache", "net.sf.ehcache.Cache.flapjack.org.hibernate.cache.internal.StandardQueryCache", "Query Cache");
 
 			metricsWatcher.addJvm("jvmExample", "jvm", "JVM");
+			metricsWatcher.addWeb("webExample", "com.yammer.metrics.web.WebappMetricsFilter", "Web Server");
 
 // 			metricsWatcher.addLinkedCounter("linkedCounterExample",
 // 					"com.iovation.metrics.watcher.example.ConnectionPool",
@@ -62,7 +63,7 @@
 
 		function keepUpdatingGraphs() {
 			downloadMetricData();
-			setTimeout(keepUpdatingGraphs, 5000);
+			setTimeout(keepUpdatingGraphs, 500000);
 		}
 
 		function downloadMetricData() {
@@ -103,11 +104,16 @@
 	</div>
 	<div class="container mainContent">
 		<h1>Metrics Watcher Examples</h1>
+		<br/>
+		<p>Here are examples of the different gauge types that Metrics-watcher currently supports.</p>
 		<p>
-			Here are examples of the different gauge types that Metrics-watcher currently supports.
 			You can view the source of this page for sample usage, and the source of
 			metrics-watcher.js for API documentation.
 		</p>
+		<div class="row-fluid">
+			<div id="webExample"></div>
+		</div>
+		<br/>
 		<div class="row-fluid">
 			<div id="meterExample" class="span3"></div>
 			<div id="counterExample" class="span3"></div>
@@ -130,6 +136,7 @@
 		<div class="row-fluid">
 			<div id="queryCache"></div>
 		</div>
+		<br />
 	</div>
 </body>
 </html>
